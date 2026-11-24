@@ -1,4 +1,3 @@
-
 import { upload } from '@vercel/blob/client';
 
 window.uploadChoujiMedia = async function (file, pin, onProgress) {
@@ -33,3 +32,4 @@ window.uploadChoujiMedia = async function (file, pin, onProgress) {
 
   return result.url;
 };
+
