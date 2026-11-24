@@ -7,9 +7,16 @@ export default async function handler(req, res) {
   }
 
   try {
+    const token = process.env.CHOUJI_MEDIA2_READ_WRITE_TOKEN;
+
+    if (!token) {
+      throw new Error('Token Blob CHOUJI_MEDIA2 belum tersedia.');
+    }
+
     const result = await handleUpload({
       body: req.body,
       request: req,
+      token,
 
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const data = JSON.parse(clientPayload || '{}');
@@ -43,6 +50,8 @@ export default async function handler(req, res) {
 
     return res.status(200).json(result);
   } catch (error) {
+    console.error('Upload error:', error);
+
     return res.status(400).json({
       error: error.message || 'Upload gagal'
     });
