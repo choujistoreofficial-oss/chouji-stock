@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -312,6 +313,7 @@ th{color:var(--red)}
               <option value="premium">Premium</option>
               <option value="akun-ml">Akun Mobile Legends</option>
               <option value="akun-ff">Akun Free Fire</option>
+              <option value="suntik">Suntik</option>
               <option value="lainnya">Lainnya</option>
             </select>
           </div>
@@ -364,6 +366,7 @@ th{color:var(--red)}
             <option value="premium">Premium</option>
             <option value="akun-ml">Akun Mobile Legends</option>
             <option value="akun-ff">Akun Free Fire</option>
+            <option value="suntik">Suntik</option>
             <option value="lainnya">Lainnya</option>
           </select>
         </div>
@@ -557,7 +560,7 @@ th{color:var(--red)}
 </div>
 
 <script>
-  
+
 const ADMIN_PIN = "080813";
 const PRODUCT_KEY = "chouji_produk";
 const SETTINGS_KEY = "chouji_settings";
@@ -729,6 +732,7 @@ function categoryName(value){
     premium:"Premium",
     "akun-ml":"Akun Mobile Legends",
     "akun-ff":"Akun Free Fire",
+    suntik:"Suntik",
     lainnya:"Lainnya"
   };
 
@@ -805,8 +809,8 @@ function renderProducts(){
 
     tbody.appendChild(tr);
   });
-}
-
+  }
+  
 function renderAll(){
   renderDashboard();
   renderProducts();
@@ -1203,4 +1207,3 @@ renderAll();
 
 </body>
 </html>
-
