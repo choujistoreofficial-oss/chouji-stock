@@ -204,6 +204,11 @@ th{color:var(--red)}
   font-size:12px;
   overflow-wrap:anywhere;
 }
+input[type="file"]{
+  display:block;
+  padding:10px;
+  cursor:pointer;
+}
 @media(max-width:750px){
   .sidebar{
     position:relative;
@@ -313,7 +318,7 @@ th{color:var(--red)}
 
           <div class="field full">
             <label>Upload Gambar Produk dari Galeri HP</label>
-            <input id="pFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="previewUploadedImage(event)">
+            <input id="pFile" type="file" accept="image/*" onchange="previewUploadedImage(event)">
             <span id="productUploadStatus" class="upload-status">Pilih gambar untuk mulai upload.</span>
           </div>
 
@@ -363,7 +368,7 @@ th{color:var(--red)}
         <h3>Video Beranda</h3>
         <div class="field">
           <label>Upload Video dari Galeri HP</label>
-          <input id="homeVideoFile" type="file" accept="video/mp4,video/webm,video/quicktime" onchange="uploadHomeVideo(event)">
+          <input id="homeVideoFile" type="file" accept="video/*" onchange="uploadHomeVideo(event)">
           <span id="videoUploadStatus" class="upload-status">Pilih video untuk mulai upload.</span>
         </div>
         <div class="field">
@@ -408,7 +413,7 @@ th{color:var(--red)}
         </div>
         <div class="field">
           <label>Upload Logo dari Galeri HP</label>
-          <input id="logoFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" onchange="uploadLogo(event)">
+          <input id="logoFile" type="file" accept="image/*" onchange="uploadLogo(event)">
           <span id="logoUploadStatus" class="upload-status">Pilih logo untuk mulai upload.</span>
         </div>
         <div class="field">
@@ -463,8 +468,8 @@ th{color:var(--red)}
   </main>
 </div>
 
-<!-- LANJUTKAN DENGAN BAGIAN 2 TEPAT DI SINI -->
-
+<!-- BAGIAN 2 DITEMPEL TEPAT DI BAWAH SINI -->
+  
 <script>
 const ADMIN_PIN = "080813";
 const PRODUCT_KEY = "chouji_produk";
@@ -529,11 +534,47 @@ const DEFAULT_SETTINGS = {
   sewaChannelUrl:"https://whatsapp.com/channel/0029Vb93Imb8kyyVk2OE5n0M"
 };
 
+/* PERSIAPAN MODUL UPLOAD */
+window.choujiUploadReady = import(
+  "https://esm.sh/@vercel/blob/client"
+).then(({upload})=>{
+  window.uploadChoujiMedia = async function(
+    file,
+    pin,
+    onProgress,
+    folder
+  ){
+    const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"-");
+    const pathname=(folder||"media")+"/"+Date.now()+"-"+safeName;
+
+    const result=await upload(pathname,file,{
+      access:"public",
+      handleUploadUrl:"/api/upload",
+      multipart:file.size>100*1024*1024,
+      clientPayload:JSON.stringify({pin}),
+      onUploadProgress:(event)=>{
+        if(typeof onProgress==="function"){
+          onProgress(event.percentage);
+        }
+      }
+    });
+
+    return result.url;
+  };
+
+  return true;
+}).catch(error=>{
+  console.error("Modul upload gagal dimuat:",error);
+  return false;
+});
+
 function readProducts(){
   try{
     const data=JSON.parse(localStorage.getItem(PRODUCT_KEY)||"[]");
     return Array.isArray(data)?data:[];
-  }catch(e){return []}
+  }catch(e){
+    return [];
+  }
 }
 
 function readSettings(){
@@ -542,7 +583,9 @@ function readSettings(){
       ...DEFAULT_SETTINGS,
       ...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")
     };
-  }catch(e){return {...DEFAULT_SETTINGS}}
+  }catch(e){
+    return {...DEFAULT_SETTINGS};
+  }
 }
 
 function saveProducts(){
@@ -566,6 +609,7 @@ function loginAdmin(){
 
   document.getElementById("login").style.display="none";
   document.getElementById("app").style.display="block";
+
   renderAll();
 }
 
@@ -574,10 +618,16 @@ document.getElementById("pinInput").addEventListener("keydown",e=>{
 });
 
 function showSection(id,button){
-  document.querySelectorAll(".section").forEach(el=>el.classList.remove("active"));
-  document.querySelectorAll(".nav-btn").forEach(el=>el.classList.remove("active"));
+  document.querySelectorAll(".section").forEach(el=>{
+    el.classList.remove("active");
+  });
+
+  document.querySelectorAll(".nav-btn").forEach(el=>{
+    el.classList.remove("active");
+  });
 
   document.getElementById(id).classList.add("active");
+
   if(button) button.classList.add("active");
 
   const titles={
@@ -672,7 +722,15 @@ function renderProducts(){
     del.onclick=()=>deleteProduct(p.id);
 
     actionCell.append(edit,del);
-    tr.append(imageCell,nameCell,categoryCell,priceCell,stockCell,actionCell);
+    tr.append(
+      imageCell,
+      nameCell,
+      categoryCell,
+      priceCell,
+      stockCell,
+      actionCell
+    );
+
     tbody.appendChild(tr);
   });
 }
@@ -695,15 +753,23 @@ function updateImageRatio(){
 }
 
 function setUploadStatus(id,message){
-  document.getElementById(id).textContent=message;
+  const element=document.getElementById(id);
+  if(element) element.textContent=message;
 }
 
 async function uploadMedia(file,folder,statusId){
   if(!file) throw new Error("File belum dipilih.");
-  if(!adminPin) throw new Error("Silakan login admin terlebih dahulu.");
 
-  if(typeof window.uploadChoujiMedia!=="function"){
-    throw new Error("Sistem upload belum siap. Refresh halaman.");
+  if(!adminPin){
+    throw new Error("Silakan login admin terlebih dahulu.");
+  }
+
+  setUploadStatus(statusId,"Menyiapkan sistem upload...");
+
+  const ready=await window.choujiUploadReady;
+
+  if(!ready||typeof window.uploadChoujiMedia!=="function"){
+    throw new Error("Modul upload gagal dimuat. Periksa koneksi internet lalu refresh halaman.");
   }
 
   const maxSize=5*1024*1024*1024;
@@ -739,13 +805,18 @@ async function previewUploadedImage(event){
   uploadedImage="";
 
   const preview=document.getElementById("imagePreview");
+
   preview.src=URL.createObjectURL(file);
   preview.style.display="block";
 
   setUploadStatus("productUploadStatus","Menyiapkan upload...");
 
   try{
-    const url=await uploadMedia(file,"products","productUploadStatus");
+    const url=await uploadMedia(
+      file,
+      "products",
+      "productUploadStatus"
+    );
 
     if(!url) throw new Error("URL gambar tidak diterima.");
 
@@ -758,7 +829,10 @@ async function previewUploadedImage(event){
     );
   }catch(error){
     uploadedImage="";
-    setUploadStatus("productUploadStatus","Gagal: "+error.message);
+    setUploadStatus(
+      "productUploadStatus",
+      "Gagal: "+error.message
+    );
     alert(error.message);
   }
 }
@@ -777,7 +851,11 @@ async function uploadHomeVideo(event){
   setUploadStatus("videoUploadStatus","Menyiapkan video...");
 
   try{
-    const url=await uploadMedia(file,"home-video","videoUploadStatus");
+    const url=await uploadMedia(
+      file,
+      "home-video",
+      "videoUploadStatus"
+    );
 
     document.getElementById("homeVideo").value=url;
 
@@ -786,7 +864,10 @@ async function uploadHomeVideo(event){
       "Video berhasil diupload! Tekan Simpan Pengaturan Home."
     );
   }catch(error){
-    setUploadStatus("videoUploadStatus","Gagal: "+error.message);
+    setUploadStatus(
+      "videoUploadStatus",
+      "Gagal: "+error.message
+    );
     alert(error.message);
   }
 }
@@ -805,7 +886,11 @@ async function uploadLogo(event){
   setUploadStatus("logoUploadStatus","Menyiapkan logo...");
 
   try{
-    const url=await uploadMedia(file,"branding","logoUploadStatus");
+    const url=await uploadMedia(
+      file,
+      "branding",
+      "logoUploadStatus"
+    );
 
     document.getElementById("logoUrl").value=url;
 
@@ -814,7 +899,10 @@ async function uploadLogo(event){
       "Logo berhasil diupload! Tekan Simpan Tampilan Website."
     );
   }catch(error){
-    setUploadStatus("logoUploadStatus","Gagal: "+error.message);
+    setUploadStatus(
+      "logoUploadStatus",
+      "Gagal: "+error.message
+    );
     alert(error.message);
   }
 }
@@ -836,7 +924,10 @@ function clearProductForm(){
   document.getElementById("formTitle").textContent="Tambah Produk";
 
   uploadedImage="";
-  setUploadStatus("productUploadStatus","Pilih gambar untuk mulai upload.");
+  setUploadStatus(
+    "productUploadStatus",
+    "Pilih gambar untuk mulai upload."
+  );
 }
 
 function saveProduct(){
@@ -907,8 +998,10 @@ function editProduct(id){
   document.getElementById("pCategory").value=p.kategori||"lainnya";
   document.getElementById("pPrice").value=p.harga||0;
   document.getElementById("pStock").value=p.stok||0;
+
   document.getElementById("pImage").value=
     p.gambar&&!p.gambar.startsWith("data:")?p.gambar:"";
+
   document.getElementById("pDescription").value=p.deskripsi||"";
 
   uploadedImage="";
@@ -1049,7 +1142,7 @@ function backupData(){
   a.download="chouji-store-backup.json";
   a.click();
 
-  URL.revokeObjectURL(url);
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 function restoreData(event){
@@ -1070,7 +1163,9 @@ function restoreData(event){
         throw new Error("Format backup tidak sesuai.");
       }
 
-      if(!confirm("Pulihkan backup? Data produk dan pengaturan saat ini akan diganti.")) return;
+      if(!confirm("Pulihkan backup? Data produk dan pengaturan saat ini akan diganti.")){
+        return;
+      }
 
       const oldProducts=products;
       const oldSettings=settings;
@@ -1099,37 +1194,8 @@ function restoreData(event){
   reader.readAsText(file);
 }
 
-/* JALANKAN SETELAH HTML SELESAI DIBUAT */
+/* TAMPILKAN DATA SETELAH HTML SIAP */
 renderAll();
-</script>
-
-<!-- MODUL UPLOAD VERCEL BLOB -->
-<script type="module">
-import { upload } from "https://esm.sh/@vercel/blob/client";
-
-window.uploadChoujiMedia = async function(
-  file,
-  pin,
-  onProgress,
-  folder
-){
-  const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"-");
-  const pathname=(folder||"media")+"/"+Date.now()+"-"+safeName;
-
-  const result=await upload(pathname,file,{
-    access:"public",
-    handleUploadUrl:"/api/upload",
-    multipart:file.size>100*1024*1024,
-    clientPayload:JSON.stringify({pin}),
-    onUploadProgress:(event)=>{
-      if(typeof onProgress==="function"){
-        onProgress(event.percentage);
-      }
-    }
-  });
-
-  return result.url;
-};
 </script>
 
 </body>
