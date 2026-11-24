@@ -7,19 +7,17 @@ export default async function handler(req, res) {
   }
 
   try {
-    const body = req.body;
-
-    const jsonResponse = await handleUpload({
-      body,
+    const result = await handleUpload({
+      body: req.body,
       request: req,
 
-      onBeforeGenerateToken: async (
-        pathname,
-        clientPayload
-      ) => {
+      onBeforeGenerateToken: async (pathname, clientPayload) => {
         const data = JSON.parse(clientPayload || '{}');
 
-        if (data.pin !== process.env.CHOUJI_ADMIN_PIN) {
+        if (
+          !process.env.CHOUJI_ADMIN_PIN ||
+          data.pin !== process.env.CHOUJI_ADMIN_PIN
+        ) {
           throw new Error('PIN admin salah');
         }
 
@@ -43,11 +41,10 @@ export default async function handler(req, res) {
       }
     });
 
-    return res.status(200).json(jsonResponse);
-
+    return res.status(200).json(result);
   } catch (error) {
     return res.status(400).json({
-      error: error.message
+      error: error.message || 'Upload gagal'
     });
   }
 }
