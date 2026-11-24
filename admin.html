@@ -54,9 +54,7 @@ input,textarea,select{
   border-radius:9px;
   outline:none;
 }
-input:focus,textarea:focus,select:focus{
-  border-color:var(--red);
-}
+input:focus,textarea:focus,select:focus{border-color:var(--red)}
 textarea{min-height:100px;resize:vertical}
 button{
   border:0;
@@ -279,7 +277,6 @@ th{color:var(--red)}
       </div>
     </section>
 
-    <!-- PRODUK -->
     <section class="section" id="products">
       <div class="panel">
         <h3 id="formTitle">Tambah Produk</h3>
@@ -361,7 +358,6 @@ th{color:var(--red)}
       </div>
     </section>
 
-    <!-- PENGATURAN HOME -->
     <section class="section" id="home">
       <div class="panel">
         <h3>Video Beranda</h3>
@@ -403,7 +399,6 @@ th{color:var(--red)}
       </div>
     </section>
 
-    <!-- TAMPILAN WEBSITE -->
     <section class="section" id="website">
       <div class="panel">
         <h3>Identitas Toko</h3>
@@ -428,69 +423,29 @@ th{color:var(--red)}
 
       <div class="panel">
         <h3>Teks Website</h3>
-        <div class="field">
-          <label>Judul Utama</label>
-          <input id="heading">
-        </div>
-        <div class="field">
-          <label>Subjudul</label>
-          <input id="subtitle">
-        </div>
-        <div class="field">
-          <label>Judul Katalog</label>
-          <input id="sectionTitle">
-        </div>
-        <div class="field">
-          <label>Deskripsi Katalog</label>
-          <input id="sectionDesc">
-        </div>
-        <div class="field">
-          <label>Judul Promo</label>
-          <input id="promoTitle">
-        </div>
-        <div class="field">
-          <label>Deskripsi Promo</label>
-          <textarea id="promoText"></textarea>
-        </div>
-        <div class="field">
-          <label>Teks Footer</label>
-          <input id="footer">
-        </div>
+        <div class="field"><label>Judul Utama</label><input id="heading"></div>
+        <div class="field"><label>Subjudul</label><input id="subtitle"></div>
+        <div class="field"><label>Judul Katalog</label><input id="sectionTitle"></div>
+        <div class="field"><label>Deskripsi Katalog</label><input id="sectionDesc"></div>
+        <div class="field"><label>Judul Promo</label><input id="promoTitle"></div>
+        <div class="field"><label>Deskripsi Promo</label><textarea id="promoText"></textarea></div>
+        <div class="field"><label>Teks Footer</label><input id="footer"></div>
       </div>
 
       <div class="panel">
         <h3>Warna Website</h3>
         <div class="form-grid">
-          <div class="field">
-            <label>Warna Utama</label>
-            <input id="primary" type="color">
-          </div>
-          <div class="field">
-            <label>Warna Sekunder</label>
-            <input id="secondary" type="color">
-          </div>
-          <div class="field">
-            <label>Background</label>
-            <input id="background" type="color">
-          </div>
-          <div class="field">
-            <label>Panel</label>
-            <input id="panelColor" type="color">
-          </div>
-          <div class="field">
-            <label>Warna Teks</label>
-            <input id="textColor" type="color">
-          </div>
-          <div class="field">
-            <label>Warna Border</label>
-            <input id="borderColor" type="color">
-          </div>
+          <div class="field"><label>Warna Utama</label><input id="primary" type="color"></div>
+          <div class="field"><label>Warna Sekunder</label><input id="secondary" type="color"></div>
+          <div class="field"><label>Background</label><input id="background" type="color"></div>
+          <div class="field"><label>Panel</label><input id="panelColor" type="color"></div>
+          <div class="field"><label>Warna Teks</label><input id="textColor" type="color"></div>
+          <div class="field"><label>Warna Border</label><input id="borderColor" type="color"></div>
         </div>
         <button onclick="saveWebsiteSettings()">Simpan Tampilan Website</button>
       </div>
     </section>
 
-    <!-- BACKUP -->
     <section class="section" id="backup">
       <div class="panel">
         <h3>Backup Data Website</h3>
@@ -507,6 +462,9 @@ th{color:var(--red)}
     </section>
   </main>
 </div>
+
+<!-- LANJUTKAN DENGAN BAGIAN 2 TEPAT DI SINI -->
+
 <script>
 const ADMIN_PIN = "080813";
 const PRODUCT_KEY = "chouji_produk";
@@ -742,10 +700,7 @@ function setUploadStatus(id,message){
 
 async function uploadMedia(file,folder,statusId){
   if(!file) throw new Error("File belum dipilih.");
-
-  if(!adminPin){
-    throw new Error("Silakan login admin terlebih dahulu.");
-  }
+  if(!adminPin) throw new Error("Silakan login admin terlebih dahulu.");
 
   if(typeof window.uploadChoujiMedia!=="function"){
     throw new Error("Sistem upload belum siap. Refresh halaman.");
@@ -781,6 +736,8 @@ async function previewUploadedImage(event){
     return;
   }
 
+  uploadedImage="";
+
   const preview=document.getElementById("imagePreview");
   preview.src=URL.createObjectURL(file);
   preview.style.display="block";
@@ -788,11 +745,9 @@ async function previewUploadedImage(event){
   setUploadStatus("productUploadStatus","Menyiapkan upload...");
 
   try{
-    const url=await uploadMedia(
-      file,
-      "products",
-      "productUploadStatus"
-    );
+    const url=await uploadMedia(file,"products","productUploadStatus");
+
+    if(!url) throw new Error("URL gambar tidak diterima.");
 
     uploadedImage=url;
     preview.src=url;
@@ -803,10 +758,7 @@ async function previewUploadedImage(event){
     );
   }catch(error){
     uploadedImage="";
-    setUploadStatus(
-      "productUploadStatus",
-      "Gagal: "+error.message
-    );
+    setUploadStatus("productUploadStatus","Gagal: "+error.message);
     alert(error.message);
   }
 }
@@ -825,11 +777,7 @@ async function uploadHomeVideo(event){
   setUploadStatus("videoUploadStatus","Menyiapkan video...");
 
   try{
-    const url=await uploadMedia(
-      file,
-      "home-video",
-      "videoUploadStatus"
-    );
+    const url=await uploadMedia(file,"home-video","videoUploadStatus");
 
     document.getElementById("homeVideo").value=url;
 
@@ -838,10 +786,7 @@ async function uploadHomeVideo(event){
       "Video berhasil diupload! Tekan Simpan Pengaturan Home."
     );
   }catch(error){
-    setUploadStatus(
-      "videoUploadStatus",
-      "Gagal: "+error.message
-    );
+    setUploadStatus("videoUploadStatus","Gagal: "+error.message);
     alert(error.message);
   }
 }
@@ -860,11 +805,7 @@ async function uploadLogo(event){
   setUploadStatus("logoUploadStatus","Menyiapkan logo...");
 
   try{
-    const url=await uploadMedia(
-      file,
-      "branding",
-      "logoUploadStatus"
-    );
+    const url=await uploadMedia(file,"branding","logoUploadStatus");
 
     document.getElementById("logoUrl").value=url;
 
@@ -873,10 +814,7 @@ async function uploadLogo(event){
       "Logo berhasil diupload! Tekan Simpan Tampilan Website."
     );
   }catch(error){
-    setUploadStatus(
-      "logoUploadStatus",
-      "Gagal: "+error.message
-    );
+    setUploadStatus("logoUploadStatus","Gagal: "+error.message);
     alert(error.message);
   }
 }
@@ -923,6 +861,11 @@ function saveProduct(){
   const old=products.find(p=>String(p.id)===String(id));
   const gambar=uploadedImage||urlImage||(old?old.gambar:"");
 
+  if(!gambar){
+    alert("Upload gambar atau masukkan URL gambar terlebih dahulu.");
+    return;
+  }
+
   const product={
     ...(old||{}),
     id:old?old.id:Date.now().toString(),
@@ -933,6 +876,8 @@ function saveProduct(){
     deskripsi,
     gambar
   };
+
+  const previousProducts=[...products];
 
   if(old){
     products=products.map(p=>
@@ -948,7 +893,8 @@ function saveProduct(){
     clearProductForm();
     alert("Produk berhasil disimpan!");
   }catch(e){
-    alert("Penyimpanan gagal. Periksa ruang penyimpanan browser.");
+    products=previousProducts;
+    alert("Penyimpanan gagal: "+e.message);
   }
 }
 
@@ -961,10 +907,8 @@ function editProduct(id){
   document.getElementById("pCategory").value=p.kategori||"lainnya";
   document.getElementById("pPrice").value=p.harga||0;
   document.getElementById("pStock").value=p.stok||0;
-
   document.getElementById("pImage").value=
     p.gambar&&!p.gambar.startsWith("data:")?p.gambar:"";
-
   document.getElementById("pDescription").value=p.deskripsi||"";
 
   uploadedImage="";
@@ -988,9 +932,16 @@ function editProduct(id){
 function deleteProduct(id){
   if(!confirm("Yakin ingin menghapus produk ini?")) return;
 
+  const previousProducts=[...products];
   products=products.filter(p=>String(p.id)!==String(id));
-  saveProducts();
-  renderAll();
+
+  try{
+    saveProducts();
+    renderAll();
+  }catch(e){
+    products=previousProducts;
+    alert("Gagal menghapus produk: "+e.message);
+  }
 }
 
 /* PENGATURAN HOME */
@@ -1011,8 +962,12 @@ function saveHomeSettings(){
   settings.sewaWhatsappUrl=document.getElementById("sewaWhatsappUrl").value.trim();
   settings.sewaChannelUrl=document.getElementById("sewaChannelUrl").value.trim();
 
-  saveSettings();
-  alert("Pengaturan Home berhasil disimpan!");
+  try{
+    saveSettings();
+    alert("Pengaturan Home berhasil disimpan!");
+  }catch(e){
+    alert("Gagal menyimpan pengaturan: "+e.message);
+  }
 }
 
 /* TAMPILAN WEBSITE */
@@ -1065,8 +1020,12 @@ function saveWebsiteSettings(){
     settings[key]=document.getElementById(id).value.trim();
   });
 
-  saveSettings();
-  alert("Tampilan website berhasil disimpan!");
+  try{
+    saveSettings();
+    alert("Tampilan website berhasil disimpan!");
+  }catch(e){
+    alert("Gagal menyimpan tampilan: "+e.message);
+  }
 }
 
 /* BACKUP DAN RESTORE */
@@ -1113,16 +1072,25 @@ function restoreData(event){
 
       if(!confirm("Pulihkan backup? Data produk dan pengaturan saat ini akan diganti.")) return;
 
+      const oldProducts=products;
+      const oldSettings=settings;
+
       products=data.products;
       settings={...DEFAULT_SETTINGS,...data.settings};
 
-      saveProducts();
-      saveSettings();
-      renderAll();
+      try{
+        saveProducts();
+        saveSettings();
+      }catch(saveError){
+        products=oldProducts;
+        settings=oldSettings;
+        throw saveError;
+      }
 
+      renderAll();
       alert("Backup berhasil dipulihkan!");
     }catch(e){
-      alert("File backup tidak valid atau rusak.");
+      alert("File backup tidak valid atau gagal disimpan: "+e.message);
     }finally{
       event.target.value="";
     }
@@ -1131,6 +1099,7 @@ function restoreData(event){
   reader.readAsText(file);
 }
 
+/* JALANKAN SETELAH HTML SELESAI DIBUAT */
 renderAll();
 </script>
 
@@ -1145,8 +1114,7 @@ window.uploadChoujiMedia = async function(
   folder
 ){
   const safeName=file.name.replace(/[^a-zA-Z0-9._-]/g,"-");
-  const pathname=
-    (folder||"media")+"/"+Date.now()+"-"+safeName;
+  const pathname=(folder||"media")+"/"+Date.now()+"-"+safeName;
 
   const result=await upload(pathname,file,{
     access:"public",
