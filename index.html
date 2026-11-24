@@ -139,7 +139,6 @@ h1 span{color:var(--red);text-shadow:0 0 30px #ff263855}
  margin:auto;overflow:hidden;
 }
 .emblem img{width:100%;height:100%;object-fit:cover}
-.visual-bottom strong{font-size:19px;color:white}
 
 /* VIDEO */
 .video-section{padding:15px 0 35px}
@@ -304,11 +303,13 @@ footer{
 <!-- KATEGORI -->
 <div class="category-nav" id="categoryNav">
  <a href="#home" data-category="home" class="active">Home</a>
+ <a href="#produk" data-category="all">Semua</a>
  <a href="#produk" data-category="nokos">Nokos</a>
  <a href="#produk" data-category="sewa-bot">Sewa Bot</a>
  <a href="#produk" data-category="premium">Premium</a>
  <a href="#produk" data-category="akun-ml">Akun Mobile Legends</a>
  <a href="#produk" data-category="akun-ff">Akun Free Fire</a>
+ <a href="#produk" data-category="lainnya">Lainnya</a>
 </div>
 
 <!-- HERO -->
@@ -405,409 +406,648 @@ footer{
 </footer>
 
 <script>
-const PRODUCT_KEY="chouji_produk";
-const SETTINGS_KEY="chouji_settings";
+ 
+const ADMIN_PIN = "080813";
+const PRODUCT_KEY = "chouji_produk";
+const SETTINGS_KEY = "chouji_settings";
 
-const defaults={
- storeName:"CHOUJI STORE",
- heading:"DIGITAL PRODUCTS STORE",
- subtitle:"YOUR DIGITAL NEEDS.",
- sectionTitle:"Katalog Produk.",
- sectionDesc:"Temukan berbagai kebutuhan digital di CHOUJI STORE.",
- footer:"YOUR DIGITAL STORE",
- whatsapp:"6283194629621",
- primary:"#ff2638",
- secondary:"#a71929",
- background:"#08090d",
- panel:"#141620",
- text:"#ffffff",
- border:"#292c39",
- logoUrl:"",
- promoTitle:"Hubungi Owner",
- promoText:"Ada pertanyaan atau ingin memesan produk? Hubungi owner CHOUJI STORE.",
- homeVideo:"",
- homeWelcome:"",
- topupUrl:"https://choujistore.my.id/",
- tiktokUrl:"https://www.tiktok.com/@duke_chouji?_r=1&_t=ZS-9B5uow7TVmm",
- sewaWhatsappUrl:"https://wa.me/6283194629621?text=Halo%2C%20saya%20ingin%20sewa%20bot%20WhatsApp",
- sewaChannelUrl:"https://whatsapp.com/channel/0029Vb93Imb8kyyVk2OE5n0M"
+const DEFAULT_WELCOME = `✨ Selamat datang di saluran Chouji Store ✨
+
+• Gmail ✅
+• Nokos ✅
+• Top Up Game & Voucher ✅
+• Sewa bot WhatsApp ✅
+• Alight Motion Premium ✅
+___________________
+
+> Link top up game & Voucher : https://choujistore.my.id/
+> Link akun tiktok : https://www.tiktok.com/@duke_chouji?_r=1&_t=ZS-9B5uow7TVmm
+
+___________________
+
+> Sewa bot harga murah
+• VIPS | 6RB 7HR
+• VIPS | 12RB 14HR
+• VIPS | 18RB 21HR
+• VIP | 8RB 30HR
+• MINI | 5RB 30HR
+
+> Yang mau sewa bot, beli nokos, gmail DM nomor ini:
+https://wa.me/6283194629621?text=Halo%2C%20saya%20ingin%20sewa%20bot%20WhatsApp
+
+Saluran sewa bot:
+https://whatsapp.com/channel/0029Vb93Imb8kyyVk2OE5n0M
+
+Terimakasih yang sudah mampir, dan jangan lupa ikuti saluran ini.`;
+
+const DEFAULT_SETTINGS = {
+  storeName:"CHOUJI STORE",
+  heading:"DIGITAL PRODUCTS STORE",
+  subtitle:"YOUR DIGITAL NEEDS.",
+  sectionTitle:"Katalog Produk",
+  sectionDesc:"Temukan berbagai kebutuhan digital di CHOUJI STORE.",
+  footer:"YOUR DIGITAL STORE",
+  whatsapp:"6283194629621",
+  primary:"#ff2638",
+  secondary:"#a71929",
+  background:"#090a10",
+  panel:"#141620",
+  text:"#ffffff",
+  border:"#292c39",
+  logoUrl:"",
+  promoTitle:"Hubungi Owner",
+  promoText:"Butuh bantuan atau ingin melakukan pemesanan? Hubungi owner CHOUJI STORE.",
+  homeVideo:"",
+  homeWelcome:DEFAULT_WELCOME,
+  topupUrl:"https://choujistore.my.id/",
+  tiktokUrl:"https://www.tiktok.com/@duke_chouji?_r=1&_t=ZS-9B5uow7TVmm",
+  sewaWhatsappUrl:"https://wa.me/6283194629621?text=Halo%2C%20saya%20ingin%20sewa%20bot%20WhatsApp",
+  sewaChannelUrl:"https://whatsapp.com/channel/0029Vb93Imb8kyyVk2OE5n0M"
 };
 
-let activeCategory="all";
+let products = readProducts();
+let settings = readSettings();
+let uploadedImage = "";
 
-function getSettings(){
- try{
-  return {
-   ...defaults,
-   ...JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}")
-  };
- }catch(e){
-  return {...defaults};
- }
+function readProducts(){
+  try{
+    const data = JSON.parse(localStorage.getItem(PRODUCT_KEY) || "[]");
+    return Array.isArray(data) ? data : [];
+  }catch(e){
+    return [];
+  }
 }
 
-function getProducts(){
- try{
-  const data=JSON.parse(localStorage.getItem(PRODUCT_KEY)||"[]");
-  return Array.isArray(data)?data:[];
- }catch(e){
-  return [];
- }
+function readSettings(){
+  try{
+    return {
+      ...DEFAULT_SETTINGS,
+      ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}")
+    };
+  }catch(e){
+    return {...DEFAULT_SETTINGS};
+  }
+}
+
+function saveProducts(){
+  localStorage.setItem(PRODUCT_KEY,JSON.stringify(products));
+}
+
+function saveSettings(){
+  localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));
+}
+
+function loginAdmin(){
+  const pin = document.getElementById("pinInput").value;
+
+  if(pin !== ADMIN_PIN){
+    document.getElementById("loginError").textContent = "PIN salah!";
+    return;
+  }
+
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
+  renderAll();
+}
+
+document.getElementById("pinInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter") loginAdmin();
+});
+
+function showSection(id,button){
+  document.querySelectorAll(".section").forEach(el=>{
+    el.classList.remove("active");
+  });
+
+  document.querySelectorAll(".nav-btn").forEach(el=>{
+    el.classList.remove("active");
+  });
+
+  document.getElementById(id).classList.add("active");
+
+  if(button) button.classList.add("active");
+
+  const titles={
+    dashboard:"Dashboard",
+    products:"Manajemen Produk",
+    home:"Pengaturan Home",
+    website:"Tampilan Website",
+    contact:"Kontak & Sosial",
+    backup:"Backup Data"
+  };
+
+  document.getElementById("pageTitle").textContent=titles[id] || "Admin";
 }
 
 function money(value){
- return "Rp"+Number(value||0).toLocaleString("id-ID");
+  return "Rp"+Number(value || 0).toLocaleString("id-ID");
+}
+
+function renderDashboard(){
+  const total=products.length;
+
+  const stock=products.reduce((sum,p)=>{
+    return sum+Math.max(0,Number(p.stok)||0);
+  },0);
+
+  const value=products.reduce((sum,p)=>{
+    return sum+
+      (Math.max(0,Number(p.stok)||0)*
+      Math.max(0,Number(p.harga)||0));
+  },0);
+
+  const available=products.filter(p=>
+    Number(p.stok)>0
+  ).length;
+
+  const empty=products.filter(p=>
+    Number(p.stok)<=0
+  ).length;
+
+  document.getElementById("totalProducts").textContent=total;
+  document.getElementById("totalStock").textContent=stock;
+  document.getElementById("stockValue").textContent=money(value);
+  document.getElementById("availableProducts").textContent=available;
+  document.getElementById("outOfStock").textContent=empty;
 }
 
 function categoryName(value){
- const names={
-  nokos:"Nokos",
-  "sewa-bot":"Sewa Bot",
-  premium:"Premium",
-  "akun-ml":"Akun Mobile Legends",
-  "akun-ff":"Akun Free Fire",
-  lainnya:"Lainnya"
- };
- return names[value]||"Produk Digital";
-}
-
-function safeUrl(value){
- try{
-  const url=new URL(value);
-  if(url.protocol==="https:" || url.protocol==="http:") return url.href;
- }catch(e){}
- return "";
-}
-
-/* LINKIFY TEKS SAMBUTAN */
-function renderWelcome(settings){
- const box=document.getElementById("welcomeContent");
- box.textContent="";
-
- const text=settings.homeWelcome || 
-  "✨ Selamat datang di Chouji Store ✨\n\nSilakan hubungi owner untuk informasi dan pemesanan produk.";
-
- const lines=text.split("\n");
-
- lines.forEach((line,index)=>{
-  const regex=/(https?:\/\/[^\s]+)/g;
-  let last=0;
-  let match;
-
-  while((match=regex.exec(line))!==null){
-   box.appendChild(document.createTextNode(line.slice(last,match.index)));
-
-   const link=document.createElement("a");
-   const url=safeUrl(match[0].replace(/[.,]+$/,""));
-
-   if(url){
-    link.href=url;
-    link.target="_blank";
-    link.rel="noopener";
-    link.textContent=match[0];
-    box.appendChild(link);
-   }else{
-    box.appendChild(document.createTextNode(match[0]));
-   }
-   last=match.index+match[0].length;
-  }
-
-  box.appendChild(document.createTextNode(line.slice(last)));
-
-  if(index<lines.length-1){
-   box.appendChild(document.createElement("br"));
-  }
- });
-}
-
-/* VIDEO HOME */
-function renderVideo(settings){
- const section=document.getElementById("videoSection");
- const box=document.getElementById("videoBox");
- const url=safeUrl(settings.homeVideo||"");
-
- box.innerHTML="";
-
- if(!url){
-  section.style.display="none";
-  return;
- }
-
- section.style.display="block";
-
- let youtubeId="";
-
- try{
-  const parsed=new URL(url);
-
-  if(parsed.hostname.includes("youtube.com")){
-   youtubeId=parsed.searchParams.get("v")||"";
-   if(parsed.pathname.startsWith("/embed/")){
-    youtubeId=parsed.pathname.split("/embed/")[1].split("/")[0];
-   }
-  }else if(parsed.hostname==="youtu.be"){
-   youtubeId=parsed.pathname.replace("/","");
-  }
- }catch(e){}
-
- if(youtubeId){
-  const iframe=document.createElement("iframe");
-  iframe.src="https://www.youtube-nocookie.com/embed/"+encodeURIComponent(youtubeId);
-  iframe.title="Video CHOUJI STORE";
-  iframe.allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-  iframe.allowFullscreen=true;
-  box.appendChild(iframe);
- }else if(/\.(mp4|webm|ogg)(\?.*)?$/i.test(url)){
-  const video=document.createElement("video");
-  video.src=url;
-  video.controls=true;
-  video.playsInline=true;
-  video.preload="metadata";
-  box.appendChild(video);
- }else{
-  const link=document.createElement("a");
-  link.href=url;
-  link.target="_blank";
-  link.rel="noopener";
-  link.textContent="▶ Tonton video CHOUJI STORE";
-  link.className="video-placeholder";
-  box.appendChild(link);
- }
-}
-
-/* LOGO */
-function renderLogo(settings){
- const navLogo=document.getElementById("navLogo");
- const heroLogo=document.getElementById("heroLogo");
-
- navLogo.textContent="C";
- heroLogo.textContent="C";
-
- const url=safeUrl(settings.logoUrl||"");
- if(!url) return;
-
- const navImg=document.createElement("img");
- navImg.src=url;
- navImg.alt="Logo";
- navLogo.textContent="";
- navLogo.appendChild(navImg);
-
- const heroImg=document.createElement("img");
- heroImg.src=url;
- heroImg.alt="Logo CHOUJI STORE";
- heroLogo.textContent="";
- heroLogo.appendChild(heroImg);
-}
-
-/* KATEGORI */
-function setCategory(category){
- activeCategory=category;
-
- document.querySelectorAll("#categoryNav a").forEach(link=>{
-  link.classList.toggle("active",link.dataset.category===category);
- });
-
- if(category!=="home"){
-  document.getElementById("produk").scrollIntoView({behavior:"smooth"});
- }else{
-  document.getElementById("home").scrollIntoView({behavior:"smooth"});
- }
-
- renderProducts();
-}
-
-document.querySelectorAll("#categoryNav a").forEach(link=>{
- link.addEventListener("click",event=>{
-  event.preventDefault();
-  setCategory(link.dataset.category);
- });
-});
-
-/* KARTU PRODUK */
-function createProductCard(product,settings){
- const card=document.createElement("article");
- card.className="product";
-
- const imageBox=document.createElement("div");
- imageBox.className="product-img";
-
- if(product.kategori==="akun-ml" || product.kategori==="akun-ff"){
-  imageBox.classList.add("landscape");
- }
-
- if(product.gambar){
-  const img=document.createElement("img");
-  img.src=product.gambar;
-  img.alt=product.nama||"Produk";
-  img.loading="lazy";
-  img.onerror=()=>{
-   imageBox.innerHTML='<div class="placeholder">📦</div>';
+  const names={
+    nokos:"Nokos",
+    "sewa-bot":"Sewa Bot",
+    premium:"Premium",
+    "akun-ml":"Akun Mobile Legends",
+    "akun-ff":"Akun Free Fire",
+    lainnya:"Lainnya"
   };
-  imageBox.appendChild(img);
- }else{
-  const placeholder=document.createElement("div");
-  placeholder.className="placeholder";
-  placeholder.textContent="📦";
-  imageBox.appendChild(placeholder);
- }
 
- const body=document.createElement("div");
- body.className="product-body";
-
- const top=document.createElement("div");
- top.className="product-top";
-
- const title=document.createElement("h3");
- title.textContent=product.nama||"Produk Digital";
-
- const stock=document.createElement("span");
- stock.className="stock";
- stock.textContent="Stok: "+(Number(product.stok)||0);
-
- top.append(title,stock);
-
- const category=document.createElement("span");
- category.className="category-label";
- category.textContent=categoryName(product.kategori);
-
- const desc=document.createElement("p");
- desc.className="desc";
- desc.textContent=product.deskripsi||"Produk digital pilihan.";
-
- const price=document.createElement("div");
- price.className="price";
- price.textContent=money(product.harga);
-
- const button=document.createElement("a");
- button.className="buy";
- button.target="_blank";
- button.rel="noopener";
- button.textContent="Pesan via WhatsApp ↗";
-
- const number=(settings.whatsapp||defaults.whatsapp).replace(/\D/g,"");
- const message=
-  "Halo owner "+settings.storeName+", saya ingin membeli:\n"+
-  "Produk: "+(product.nama||"Produk")+"\n"+
-  "Harga: "+money(product.harga)+"\n\n"+
-  "Apakah masih tersedia?";
-
- button.href="https://wa.me/"+number+"?text="+encodeURIComponent(message);
-
- if(Number(product.stok)<=0){
-  button.textContent="Stok Habis";
-  button.style.opacity=".45";
-  button.style.pointerEvents="none";
- }
-
- body.append(top,category,desc,price,button);
- card.append(imageBox,body);
-
- return card;
+  return names[value] || "Belum dikategorikan";
 }
 
-/* RENDER PRODUK */
 function renderProducts(){
- const settings=getSettings();
- const items=getProducts();
- const query=document.getElementById("search").value.toLowerCase().trim();
- const sort=document.getElementById("sort").value;
+  const tbody=document.getElementById("productTable");
+  const search=(document.getElementById("productSearch").value || "")
+    .trim().toLowerCase();
 
- let filtered=items.filter(product=>{
-  const name=(product.nama||"").toLowerCase();
-  const description=(product.deskripsi||"").toLowerCase();
+  const category=document.getElementById("categoryFilter").value;
 
-  const matchSearch=name.includes(query)||description.includes(query);
-  const matchCategory=activeCategory==="all" ||
-   activeCategory==="home" ||
-   product.kategori===activeCategory;
+  tbody.innerHTML="";
 
-  return matchSearch && matchCategory;
- });
+  const filtered=products.filter(p=>{
+    const matchName=(p.nama || "").toLowerCase().includes(search);
+    const matchCategory=category==="all" || p.kategori===category;
+    return matchName && matchCategory;
+  });
 
- if(sort==="low"){
-  filtered.sort((a,b)=>Number(a.harga)-Number(b.harga));
- }
- if(sort==="high"){
-  filtered.sort((a,b)=>Number(b.harga)-Number(a.harga));
- }
+  if(!filtered.length){
+    tbody.innerHTML='<tr><td colspan="6">Produk tidak ditemukan.</td></tr>';
+    return;
+  }
 
- const list=document.getElementById("productList");
- list.innerHTML="";
+  filtered.forEach(p=>{
+    const tr=document.createElement("tr");
 
- if(filtered.length===0){
-  const empty=document.createElement("div");
-  empty.className="empty";
-  empty.textContent="Belum ada produk pada kategori ini.";
-  list.appendChild(empty);
-  return;
- }
+    const img=document.createElement("img");
+    img.className="product-thumb";
+    img.alt=p.nama || "Produk";
+    img.src=p.gambar || "";
+    img.onerror=()=>{img.style.display="none"};
 
- filtered.forEach(product=>{
-  list.appendChild(createProductCard(product,settings));
- });
+    const imageCell=document.createElement("td");
+    imageCell.appendChild(img);
+
+    const nameCell=document.createElement("td");
+    nameCell.textContent=p.nama || "-";
+
+    const categoryCell=document.createElement("td");
+    categoryCell.textContent=categoryName(p.kategori);
+
+    const priceCell=document.createElement("td");
+    priceCell.textContent=money(p.harga);
+
+    const stockCell=document.createElement("td");
+    stockCell.textContent=Number(p.stok)||0;
+
+    const actionCell=document.createElement("td");
+
+    const edit=document.createElement("button");
+    edit.className="small";
+    edit.textContent="Edit";
+    edit.onclick=()=>editProduct(p.id);
+
+    const del=document.createElement("button");
+    del.className="small danger";
+    del.textContent="Hapus";
+    del.style.marginLeft="5px";
+    del.onclick=()=>deleteProduct(p.id);
+
+    actionCell.append(edit,del);
+
+    tr.append(
+      imageCell,
+      nameCell,
+      categoryCell,
+      priceCell,
+      stockCell,
+      actionCell
+    );
+
+    tbody.appendChild(tr);
+  });
 }
 
-/* RENDER WEBSITE */
-function render(){
- const settings=getSettings();
- const products=getProducts();
-
- document.documentElement.style.setProperty("--red",settings.primary);
- document.documentElement.style.setProperty("--dark",settings.background);
- document.documentElement.style.setProperty("--panel",settings.panel);
- document.documentElement.style.setProperty("--text",settings.text);
- document.documentElement.style.setProperty("--border",settings.border);
-
- document.title=settings.storeName||"CHOUJI STORE";
-
- document.getElementById("navName").textContent=settings.storeName;
- document.getElementById("visualName").textContent=settings.storeName;
-
- document.getElementById("heroTag").textContent="✦ DIGITAL PRODUCTS STORE";
- document.getElementById("heroDesc").textContent=settings.subtitle;
- document.getElementById("sectionTitle").textContent=settings.sectionTitle;
- document.getElementById("sectionDesc").textContent=settings.sectionDesc;
- document.getElementById("promoTitle").textContent=settings.promoTitle||"Hubungi Owner";
- document.getElementById("promoText").textContent=settings.promoText;
- document.getElementById("footerText").textContent=settings.footer;
-
- const heading=(settings.heading||defaults.heading).trim();
- const words=heading.split(/\s+/);
- const first=words.slice(0,-1).join(" ");
- const last=words.slice(-1).join("");
-
- const heroTitle=document.getElementById("heroTitle");
- heroTitle.textContent="";
-
- heroTitle.appendChild(document.createTextNode(first+" "));
- const span=document.createElement("span");
- span.textContent=last;
- heroTitle.appendChild(span);
-
- const number=(settings.whatsapp||defaults.whatsapp).replace(/\D/g,"");
- document.getElementById("contactBtn").href="https://wa.me/"+number;
-
- document.getElementById("statProducts").textContent=products.length+" Produk";
-
- renderLogo(settings);
- renderVideo(settings);
- renderWelcome(settings);
- renderProducts();
+function renderAll(){
+  renderDashboard();
+  renderProducts();
+  fillHomeSettings();
+  fillWebsiteSettings();
+  fillContactSettings();
 }
 
-/* EVENT */
-document.getElementById("search").addEventListener("input",renderProducts);
-document.getElementById("sort").addEventListener("change",renderProducts);
+function updateImageRatio(){
+  const category=document.getElementById("pCategory").value;
+  const preview=document.getElementById("imagePreview");
 
-window.addEventListener("storage",event=>{
- if(event.key===PRODUCT_KEY || event.key===SETTINGS_KEY){
-  render();
- }
-});
+  preview.classList.toggle(
+    "landscape",
+    category==="akun-ml" || category==="akun-ff"
+  );
+}
 
-window.addEventListener("pageshow",render);
+function previewUploadedImage(event){
+  const file=event.target.files && event.target.files[0];
+  if(!file) return;
 
-render();
+  if(!file.type.startsWith("image/")){
+    alert("File harus berupa gambar.");
+    event.target.value="";
+    return;
+  }
+
+  const reader=new FileReader();
+
+  reader.onload=()=>{
+    const img=new Image();
+
+    img.onload=()=>{
+      const max=1280;
+      let width=img.width;
+      let height=img.height;
+
+      const ratio=Math.min(1,max/Math.max(width,height));
+
+      width=Math.round(width*ratio);
+      height=Math.round(height*ratio);
+
+      const canvas=document.createElement("canvas");
+      canvas.width=width;
+      canvas.height=height;
+
+      const ctx=canvas.getContext("2d");
+      ctx.drawImage(img,0,0,width,height);
+
+      uploadedImage=canvas.toDataURL("image/jpeg",0.78);
+
+      const preview=document.getElementById("imagePreview");
+      preview.src=uploadedImage;
+      preview.style.display="block";
+    };
+
+    img.onerror=()=>{
+      alert("Gambar tidak dapat dibaca.");
+    };
+
+    img.src=reader.result;
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function clearProductForm(){
+  document.getElementById("pId").value="";
+  document.getElementById("pName").value="";
+  document.getElementById("pCategory").value="";
+  document.getElementById("pPrice").value="";
+  document.getElementById("pStock").value="";
+  document.getElementById("pImage").value="";
+  document.getElementById("pDescription").value="";
+  document.getElementById("pFile").value="";
+
+  const preview=document.getElementById("imagePreview");
+  preview.src="";
+  preview.style.display="none";
+  preview.classList.remove("landscape");
+
+  document.getElementById("formTitle").textContent="Tambah Produk";
+  uploadedImage="";
+}
+
+function saveProduct(){
+  const id=document.getElementById("pId").value;
+  const nama=document.getElementById("pName").value.trim();
+  const kategori=document.getElementById("pCategory").value;
+  const harga=Number(document.getElementById("pPrice").value);
+  const stok=Number(document.getElementById("pStock").value);
+  const deskripsi=document.getElementById("pDescription").value.trim();
+  const urlImage=document.getElementById("pImage").value.trim();
+
+  if(!nama || !kategori){
+    alert("Nama produk dan kategori wajib diisi.");
+    return;
+  }
+
+  if(
+    document.getElementById("pPrice").value==="" ||
+    document.getElementById("pStock").value==="" ||
+    !Number.isFinite(harga) ||
+    harga<0 ||
+    !Number.isFinite(stok) ||
+    stok<0
+  ){
+    alert("Harga dan stok harus berupa angka yang valid.");
+    return;
+  }
+
+  const old=products.find(p=>String(p.id)===String(id));
+  const gambar=uploadedImage || urlImage || (old ? old.gambar : "");
+
+  const product={
+    ...(old || {}),
+    id:old ? old.id : Date.now().toString(),
+    nama,
+    kategori,
+    harga,
+    stok,
+    deskripsi,
+    gambar
+  };
+
+  if(old){
+    products=products.map(p=>
+      String(p.id)===String(id) ? product : p
+    );
+  }else{
+    products.push(product);
+  }
+
+  try{
+    saveProducts();
+    renderAll();
+    clearProductForm();
+    alert("Produk berhasil disimpan!");
+  }catch(e){
+    alert("Penyimpanan gagal. Ukuran gambar mungkin terlalu besar. Coba gunakan gambar yang lebih kecil.");
+  }
+}
+
+function editProduct(id){
+  const p=products.find(x=>String(x.id)===String(id));
+  if(!p) return;
+
+  document.getElementById("pId").value=p.id;
+  document.getElementById("pName").value=p.nama || "";
+  document.getElementById("pCategory").value=p.kategori || "lainnya";
+  document.getElementById("pPrice").value=p.harga ?? 0;
+  document.getElementById("pStock").value=p.stok ?? 0;
+
+  document.getElementById("pImage").value=
+    p.gambar && !p.gambar.startsWith("data:") ? p.gambar : "";
+
+  document.getElementById("pDescription").value=p.deskripsi || "";
+
+  uploadedImage=
+    p.gambar && p.gambar.startsWith("data:") ? p.gambar : "";
+
+  const preview=document.getElementById("imagePreview");
+
+  if(p.gambar){
+    preview.src=p.gambar;
+    preview.style.display="block";
+  }else{
+    preview.src="";
+    preview.style.display="none";
+  }
+
+  document.getElementById("pFile").value="";
+  document.getElementById("formTitle").textContent="Edit Produk";
+
+  updateImageRatio();
+
+  showSection(
+    "products",
+    document.querySelectorAll(".nav-btn")[1]
+  );
+
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function deleteProduct(id){
+  if(!confirm("Yakin ingin menghapus produk ini?")) return;
+
+  products=products.filter(p=>String(p.id)!==String(id));
+
+  try{
+    saveProducts();
+    renderAll();
+  }catch(e){
+    alert("Gagal menghapus produk.");
+  }
+}
+
+function fillHomeSettings(){
+  document.getElementById("homeVideo").value=settings.homeVideo || "";
+  document.getElementById("homeWelcome").value=settings.homeWelcome || DEFAULT_WELCOME;
+  document.getElementById("topupUrl").value=settings.topupUrl || "";
+  document.getElementById("tiktokUrl").value=settings.tiktokUrl || "";
+  document.getElementById("sewaWhatsappUrl").value=settings.sewaWhatsappUrl || "";
+  document.getElementById("sewaChannelUrl").value=settings.sewaChannelUrl || "";
+}
+
+function saveHomeSettings(){
+  settings.homeVideo=document.getElementById("homeVideo").value.trim();
+  settings.homeWelcome=document.getElementById("homeWelcome").value;
+  settings.topupUrl=document.getElementById("topupUrl").value.trim();
+  settings.tiktokUrl=document.getElementById("tiktokUrl").value.trim();
+  settings.sewaWhatsappUrl=document.getElementById("sewaWhatsappUrl").value.trim();
+  settings.sewaChannelUrl=document.getElementById("sewaChannelUrl").value.trim();
+
+  try{
+    saveSettings();
+    fillContactSettings();
+    alert("Pengaturan Home berhasil disimpan!");
+  }catch(e){
+    alert("Gagal menyimpan pengaturan.");
+  }
+}
+
+function fillWebsiteSettings(){
+  const fields={
+    storeName:"storeName",
+    logoUrl:"logoUrl",
+    whatsapp:"whatsapp",
+    heading:"heading",
+    subtitle:"subtitle",
+    sectionTitle:"sectionTitle",
+    sectionDesc:"sectionDesc",
+    promoTitle:"promoTitle",
+    promoText:"promoText",
+    footer:"footer",
+    primary:"primary",
+    secondary:"secondary",
+    background:"background",
+    panelColor:"panel",
+    textColor:"text",
+    borderColor:"border"
+  };
+
+  Object.entries(fields).forEach(([id,key])=>{
+    document.getElementById(id).value=settings[key] || "";
+  });
+}
+
+function saveWebsiteSettings(){
+  const fields={
+    storeName:"storeName",
+    logoUrl:"logoUrl",
+    whatsapp:"whatsapp",
+    heading:"heading",
+    subtitle:"subtitle",
+    sectionTitle:"sectionTitle",
+    sectionDesc:"sectionDesc",
+    promoTitle:"promoTitle",
+    promoText:"promoText",
+    footer:"footer",
+    primary:"primary",
+    secondary:"secondary",
+    background:"background",
+    panelColor:"panel",
+    textColor:"text",
+    borderColor:"border"
+  };
+
+  Object.entries(fields).forEach(([id,key])=>{
+    settings[key]=document.getElementById(id).value.trim();
+  });
+
+  try{
+    saveSettings();
+    fillContactSettings();
+    alert("Tampilan website berhasil disimpan!");
+  }catch(e){
+    alert("Gagal menyimpan tampilan website.");
+  }
+}
+
+function fillContactSettings(){
+  document.getElementById("contactWhatsapp").value=settings.whatsapp || "";
+  document.getElementById("contactOwnerUrl").value=settings.sewaWhatsappUrl || "";
+  document.getElementById("contactChannelUrl").value=settings.sewaChannelUrl || "";
+  document.getElementById("contactTiktok").value=settings.tiktokUrl || "";
+  document.getElementById("contactTopup").value=settings.topupUrl || "";
+}
+
+function saveContactSettings(){
+  settings.whatsapp=document.getElementById("contactWhatsapp").value.trim();
+  settings.sewaWhatsappUrl=document.getElementById("contactOwnerUrl").value.trim();
+  settings.sewaChannelUrl=document.getElementById("contactChannelUrl").value.trim();
+  settings.tiktokUrl=document.getElementById("contactTiktok").value.trim();
+  settings.topupUrl=document.getElementById("contactTopup").value.trim();
+
+  try{
+    saveSettings();
+    fillHomeSettings();
+    fillWebsiteSettings();
+    alert("Kontak & Sosial berhasil disimpan!");
+  }catch(e){
+    alert("Gagal menyimpan kontak.");
+  }
+}
+
+function backupData(){
+  const backup={
+    version:2,
+    createdAt:new Date().toISOString(),
+    products:products,
+    settings:settings
+  };
+
+  const blob=new Blob(
+    [JSON.stringify(backup,null,2)],
+    {type:"application/json"}
+  );
+
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+
+  a.href=url;
+  a.download="chouji-store-backup.json";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+function restoreData(event){
+  const file=event.target.files && event.target.files[0];
+  if(!file) return;
+
+  const reader=new FileReader();
+
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+
+      if(
+        !Array.isArray(data.products) ||
+        !data.settings ||
+        typeof data.settings!=="object" ||
+        Array.isArray(data.settings)
+      ){
+        throw new Error("Format backup tidak sesuai.");
+      }
+
+      if(!confirm("Pulihkan backup? Data produk dan pengaturan saat ini akan diganti.")){
+        return;
+      }
+
+      const oldProducts=products;
+      const oldSettings=settings;
+
+      products=data.products;
+      settings={...DEFAULT_SETTINGS,...data.settings};
+
+      try{
+        saveProducts();
+        saveSettings();
+      }catch(saveError){
+        products=oldProducts;
+        settings=oldSettings;
+        saveProducts();
+        saveSettings();
+        throw saveError;
+      }
+
+      renderAll();
+      clearProductForm();
+
+      alert("Backup berhasil dipulihkan!");
+    }catch(e){
+      alert("File backup tidak valid, rusak, atau penyimpanan gagal.");
+    }finally{
+      event.target.value="";
+    }
+  };
+
+  reader.onerror=()=>{
+    alert("File backup tidak dapat dibaca.");
+    event.target.value="";
+  };
+
+  reader.readAsText(file);
+}
+
+renderAll();
 </script>
 
 </body>
