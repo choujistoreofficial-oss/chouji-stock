@@ -1,4 +1,3 @@
-
 const crypto = require("crypto");
 const { method, send } = require("./_lib/http");
 const { requireCustomer } = require("./_lib/customer-auth");
