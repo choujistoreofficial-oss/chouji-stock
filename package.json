@@ -1,0 +1,7 @@
+{
+  "name": "chouji-nomerin-vercel",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Backend add-on Nomerin API untuk CHOUJI STOCK (Vercel + Supabase)",
+  "engines": { "node": ">=18" }
+}
