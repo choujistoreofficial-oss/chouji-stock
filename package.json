@@ -1,0 +1,11 @@
+{
+  "name": "chouji-stock-nomera",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.6"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0"
+  }
+}
