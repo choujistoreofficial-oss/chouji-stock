@@ -129,4 +129,3 @@ module.exports = async function handler(req, res) {
     return handleError(res, e);
   }
 };
-
