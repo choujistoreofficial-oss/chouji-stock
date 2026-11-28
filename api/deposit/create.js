@@ -13,7 +13,10 @@ const supabaseAuth = createClient(
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ success: false, message: "Method tidak diizinkan." });
+    return res.status(405).json({
+      success: false,
+      message: "Method tidak diizinkan."
+    });
   }
 
   try {
@@ -23,56 +26,90 @@ export default async function handler(req, res) {
       : null;
 
     if (!token) {
-      return res.status(401).json({ success: false, message: "Silakan login terlebih dahulu." });
-    }
-
-    const { data: authData, error: authError } =
-      await supabaseAuth.auth.getUser(token);
-
-    if (authError || !authData.user) {
-      return res.status(401).json({ success: false, message: "Sesi login tidak valid." });
-    }
-
-    const amount = Number(req.body?.amount);
-
-    if (!Number.isSafeInteger(amount) || amount < 1000 || amount > 10000000) {
-      return res.status(400).json({
+      return res.status(401).json({
         success: false,
-        message: "Nominal deposit minimal Rp1.000 dan maksimal Rp10.000.000."
+        message: "Silakan login terlebih dahulu."
       });
     }
 
-    const transactionCode =
-      "CHJ" + Date.now().toString(36).toUpperCase() +
-      crypto.randomUUID().replace(/-/g, "").slice(0, 6).toUpperCase();
+    const { data: auth, error: authError } =
+      await supabaseAuth.auth.getUser(token);
 
-    const { data, error } = await supabaseAdmin
-      .from("deposit")
-      .insert({
-        transaction_code: transactionCode,
-        user_id: authData.user.id,
-        requested_amount: amount,
-        admin_fee: 50,
-        status: "MENUNGGU_PEMBAYARAN"
-      })
-      .select("id, transaction_code, requested_amount, admin_fee, status, created_at, expires_at")
-      .single();
+    if (authError || !auth.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Sesi login tidak valid."
+      });
+    }
+
+    const {
+      id_pesanan,
+      product_id,
+      nama_pesanan,
+      detail_tambahan
+    } = req.body || {};
+
+    if (
+      typeof id_pesanan !== "string" ||
+      !/^[A-Za-z0-9_-]{6,80}$/.test(id_pesanan)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "ID pesanan tidak valid."
+      });
+    }
+
+    const productId = Number(product_id);
+
+    if (
+      !Number.isSafeInteger(productId) ||
+      productId <= 0
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Produk tidak valid."
+      });
+    }
+
+    const customerName =
+      typeof nama_pesanan === "string"
+        ? nama_pesanan.trim().slice(0, 100)
+        : "";
+
+    const extraDetail =
+      typeof detail_tambahan === "string"
+        ? detail_tambahan.trim().slice(0, 500)
+        : null;
+
+    const { data, error } = await supabaseAdmin.rpc(
+      "buat_pesanan_dengan_hold",
+      {
+        p_id_pesanan: id_pesanan,
+        p_product_id: productId,
+        p_user_id: auth.user.id,
+        p_nama_pesanan: customerName || "Player",
+        p_detail_tambahan: extraDetail
+      }
+    );
 
     if (error) {
-      console.error("Deposit create error:", error);
-      return res.status(500).json({
+      console.error("Order create error:", error);
+
+      return res.status(400).json({
         success: false,
-        message: "Gagal membuat transaksi deposit."
+        message: error.message || "Gagal membuat pesanan."
       });
     }
 
     return res.status(201).json({
       success: true,
-      message: "Transaksi deposit berhasil dibuat.",
-      deposit: data
+      message: "Pesanan berhasil dibuat. Saldo ditahan sementara.",
+      order: data
     });
+
   } catch (error) {
-    console.error("Deposit API error:", error);
+    console.error("Order API error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Terjadi kesalahan pada server."
